@@ -25,24 +25,59 @@ function box(name,x,y,z,w,h,d,m){const o=B.MeshBuilder.CreateBox(name,{width:w,h
 function label(text,x,z,color){const tex=new B.DynamicTexture('door-answer',{width:2048,height:1024},scene,false,B.Texture.TRILINEAR_SAMPLINGMODE);const ctx=tex.getContext();ctx.fillStyle='#020912';ctx.fillRect(0,0,2048,1024);ctx.strokeStyle=color;ctx.lineWidth=22;ctx.strokeRect(22,22,2004,980);ctx.fillStyle=color;ctx.fillRect(72,76,1904,16);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#f5ffff';ctx.shadowColor=color;ctx.shadowBlur=13;ctx.font='bold 118px monospace';const words=text.toUpperCase().split(' '),lines=[];let line='';for(const word of words){const trial=line?line+' '+word:word;if(ctx.measureText(trial).width>1740&&line){lines.push(line);line=word}else line=trial}if(line)lines.push(line);let font=118;while(lines.some(t=>{ctx.font='bold '+font+'px monospace';return ctx.measureText(t).width>1770})&&font>65)font-=5;ctx.font='bold '+font+'px monospace';const gap=font*1.35,base=520-(lines.length-1)*gap/2;lines.forEach((t,i)=>ctx.fillText(t,1024,base+i*gap));ctx.shadowBlur=0;tex.update();const m=new B.StandardMaterial('doorLabel',scene);m.diffuseTexture=tex;m.emissiveTexture=tex;m.disableLighting=true;m.backFaceCulling=false;mats.push(m);const p=B.MeshBuilder.CreatePlane('Antwort '+text,{width:4.25,height:2.3,sideOrientation:B.Mesh.DOUBLESIDE},scene);p.position.set(x,2.15,z);p.material=m;objects.push(p);return p}
 function addVault(){const red=mat('#ff3159',1.2),steel=mat('#35495a',.4),black=mat('#050a14');box('Tresor',0,2,-11.5,9,4.8,.8,steel);box('Tresortuer',0,2,-10.9,7.5,4.2,.3,black);for(let i=0;i<9;i++)laserMeshes.push(box('Laser',-3.5+i*.87,2,-10.4,.045,3.8,.05,red));$('hud').textContent='SEKTOR 00 // TRESOR // ZUM SCANNER LAUFEN'}
 function resetCamera(){if(camera){camera.position.set(0,1.8,9);camera.rotation.set(0,Math.PI,0);viewY=1.8;viewRoll=0;prevXZ=null}}
-function build(){if(!scene)return;objects.forEach(o=>o.dispose());mats.forEach(m=>m.dispose());objects=[];mats=[];doors=[];animated=[];const dominant=traits.indexOf(Math.max(...traits)),accent=colors[dominant],neon=mat(accent,.9),metal=mat('#1a263d'),floor=mat('#0b1d2b'),dark=mat('#050b15'),trim=mat('#456b7d',.4);
-scene.clearColor=B.Color4.FromHexString('#030711ff');scene.fogColor=B.Color3.FromHexString('#030711');scene.fogDensity=.018+step*.002;
-box('board',0,-.25,0,21,.5,34,floor);box('ceiling',0,4.9,0,21,.3,34,dark);
-const steel=mat('#26374a'),copper=mat('#a8754e',.2),glass=mat('#17394a',.6),warning=mat('#ffb84b',.75),shadow=mat('#07111b');
-for(let z=-14;z<=14;z+=4){box('ceiling rib',0,4.61,z,20,.27,.35,steel);for(const side of [-1,1]){box('wall column',side*9.55,2.4,z,.5,4.7,.6,steel);box('ceiling conduit',side*7.8,4.53,z,.18,.15,3.7,copper);box('wall terminal',side*9.5,2,z+.8,.15,1.1,1.3,glass);box('terminal glow',side*9.4,2.1,z+.8,.09,.4,.85,neon);box('terminal key',side*9.38,1.6,z+.8,.1,.1,.6,warning)}}
-for(let lane=-2;lane<=2;lane++){box('floor bus',lane*3.4,.02,0,.075,.07,31,lane%2?copper:neon);box('ceiling bus',lane*3.4,4.65,0,.07,.08,31,copper)}
-for(let z=-14;z<=14;z+=3){box('floor grate',0,.02,z,19,.055,.12,steel);for(let side of [-1,1]){box('wall inset',side*9.72,3.7,z,.12,.6,2.2,shadow);box('wall glyph',side*9.6,3.7,z,.08,.07,1.2,neon)}}
-for(let i=0;i<24;i++){const z=-14+(i*17%29),side=i%2?-1:1,x=side*(7.2+(i%3)*.45);box('server tower',x,1,z,1.15,2,1.1,shadow);for(let j=0;j<5;j++)box('server LED',x-side*.6,.45+j*.31,z,.06,.08,.72,j%3?neon:warning);box('cooling vent',x,2.05,z,1.2,.08,1.2,steel)}
-for(let i=0;i<12;i++){let z=-10+i*2.1;box('suspended cable',-7+(i%4)*4,4.15,z,.13,.12,1.5,copper);box('cable joint',-7+(i%4)*4,4.08,z,.32,.24,.35,neon)}
-for(let i=0;i<5;i++){let z=6-i*4;box('reactor plinth',0,.55,z,1.8,1.1,1.8,steel);let orb=B.MeshBuilder.CreateSphere('pulsing core',{diameter:1.05,segments:8},scene);orb.position.set(0,1.75,z);orb.material=neon;objects.push(orb);animated.push(orb);box('reactor cap',0,2.6,z,1.7,.18,1.7,copper)}
-
-for(let side of [-1,1])for(let z=-15;z<17;z+=2){box('wall',side*10,2.3,z,.45,4.7,2,metal);box('wire',side*9.72,1.1+(z%3)*.35,z,.08,.12,1.65,neon)}
-const seed=history.reduce((v,h,i)=>v*7+h*13+i,17);
-for(let i=0;i<55+Math.min(step,6)*9;i++){const x=((i*17+seed*3)%193)/10-9.6,z=((i*23+seed*5)%300)/10-15;box('trace',x,.035,z,.08,.07,1+i%4,neon);if(i%6===0)box('chip',x,.24,z,.85,.4,.7,dark)}
-for(let i=0;i<10+Math.min(step,5)*2;i++){let x=Math.sin(i*3.7+seed)*8,z=-9+(i*5)%20;box('pillar',x,1.2,z,.45,2.4,.45,i%3===0?neon:trim)}
+function build(){
+if(!scene)return;objects.forEach(o=>o.dispose());mats.forEach(m=>m.dispose());objects=[];mats=[];doors=[];animated=[];laserMeshes=[];
+const dominant=traits.indexOf(Math.max(...traits)),accent=colors[dominant],concrete=mat('#161c23'),shadow=mat('#070a0e'),steel=mat('#303943'),red=mat('#a82738',.7),lamp=mat('#9eb5bb',.6),doorMat=mat('#242e35'),edge=mat(accent,.45);
+scene.clearColor=B.Color4.FromHexString('#020305ff');scene.fogColor=B.Color3.FromHexString('#06080b');scene.fogDensity=.027;
+const length=100;
+box('monotone corridor floor',0,-.22,-27,9,.4,length,concrete);
+box('monotone corridor ceiling',0,4.45,-27,9,.35,length,concrete);
+for(const side of [-1,1]){
+box('long concrete wall',side*4.55,2.1,-27,.35,4.5,length,concrete);
+for(let z=-73;z<=19;z+=6){
+box('wall seam',side*4.32,2.2,z,.045,4.15,.045,shadow);
+box('rusty pipe',side*4.28,3.5,z+2,.1,.11,5.7,steel);
+box('lower wall panel',side*4.3,.8,z+1,.05,1.1,3.9,steel);
+}}
+for(let z=-73;z<=19;z+=6){
+box('ceiling fluorescent housing',0,4.19,z,2.3,.14,.65,steel);
+box('flickering fluorescent tube',0,4.09,z,1.8,.04,.35,z%3===0?red:lamp);
+box('floor joint',0,.008,z,8.8,.025,.035,shadow);
+}
+for(let z=-65;z<=8;z+=22){
+box('challenge room floor',0,-.18,z,15,.35,13,concrete);
+box('challenge room ceiling',0,4.4,z,15,.25,13,concrete);
+for(const side of [-1,1]){
+box('challenge room side wall',side*7.55,2.1,z,.35,4.5,13,steel);
+box('challenge room terminal',side*7.28,2,z,.22,1.8,1.4,shadow);
+box('challenge room screen',side*7.13,2.1,z,.07,1.05,.95,edge);
+}
+box('challenge room overhead frame',0,3.9,z-5,9,.28,.4,steel);
+}
+if(phase==='doors'){
 const answers=scenarios[step]?.a||['ERKENNTNIS','ERINNERUNG','VERBINDUNG'];
-for(let i=0;i<3;i++){const x=(i-1)*6;box('door '+i,x,2,-12,4.7,4,.45,dark);box('door edge',x-2.4,2,-11.7,.16,4.3,.25,neon);box('door edge',x+2.4,2,-11.7,.16,4.3,.25,neon);box('lintel',x,4.15,-11.7,5,.2,.3,neon);label(answers[i],x,-11.36,accent);const d=box('doorTrigger',x,1.8,-11.4,4,3.7,.3,dark);d.visibility=.01;d.metadata={answer:i};doors.push(d)}
-const kind=scenarios[step]?.kind||'KERN';$('hud').textContent='SEKTOR '+String(step+1).padStart(2,'0')+' // '+kind+' // '+['EMPATHIE','KONTROLLE','NEUGIER'][dominant];document.documentElement.style.setProperty('--accent',accent);resetCamera();if(phase!=='doors')addVault()}
+for(let i=0;i<3;i++){
+const x=(i-1)*4.6;
+box('answer door '+i,x,2,-12,4.15,4,.3,doorMat);
+box('door frame left',x-2.13,2,-11.7,.13,4.2,.4,steel);
+box('door frame right',x+2.13,2,-11.7,.13,4.2,.4,steel);
+label(answers[i],x,-11.5,accent);
+const trigger=box('doorTrigger',x,1.8,-11.3,3.8,3.7,.25,shadow);
+trigger.visibility=.01;trigger.metadata={answer:i};doors.push(trigger);
+}
+$('hud').textContent='SEKTOR '+String(step+1).padStart(2,'0')+' // KAMMER // DREI TÜREN';
+}else{
+const frame=box('vault frame',0,2,-11.6,8.8,4.8,.6,steel);
+const gate=box('Tresortuer',0,2,-10.95,7.5,4.1,.26,doorMat);
+gate.metadata={openX:8.2};
+for(let i=0;i<7;i++)laserMeshes.push(box('vault laser',-3+i,2,-10.52,.035,3.8,.035,red));
+box('scanner housing',0,2.4,-10.34,1.6,1.2,.25,steel);
+box('scanner glow',0,2.4,-10.17,1.1,.72,.06,edge);
+$('hud').textContent=phase==='vault'?'PROLOG // GEHE ZUM GESICHTSSCANNER':'SIEH MICH NICHT AN // VORWÄRTS GEHEN';
+}
+document.documentElement.style.setProperty('--accent',accent);
+resetCamera();
+}
 function init(){if(!B){$('load').textContent='3D nicht verfügbar. Textmodus bleibt spielbar.';return}engine=new B.Engine($('scene'),true,{antialias:false});engine.setHardwareScalingLevel(matchMedia('(pointer:coarse)').matches?Math.max(1.1,Math.min(1.55,devicePixelRatio*.65)):1);scene=new B.Scene(engine);scene.fogMode=B.Scene.FOGMODE_EXP2;camera=new B.UniversalCamera('YOU',new B.Vector3(0,1.8,9),scene);camera.minZ=.05;camera.fov=1.2;camera.speed=.35;camera.angularSensibility=3500;camera.keysUp=[87,38];camera.keysDown=[83,40];camera.keysLeft=[65,37];camera.keysRight=[68,39];camera.attachControl($('scene'),true);camera.checkCollisions=false;try{const fx=new B.DefaultRenderingPipeline('cinematic',true,scene,[camera]);fx.bloomEnabled=true;fx.bloomThreshold=.62;fx.bloomWeight=.24;fx.bloomKernel=48;fx.fxaaEnabled=true}catch(e){console.warn('Bloom nicht verfügbar',e)}setupTouch();window.addEventListener('keydown',e=>{if(e.code==='ShiftLeft'||e.code==='ShiftRight')sprintHeld=true});window.addEventListener('keyup',e=>{if(e.code==='ShiftLeft'||e.code==='ShiftRight')sprintHeld=false});window.addEventListener('blur',()=>sprintHeld=false);new B.HemisphericLight('ambient',new B.Vector3(0,1,0),scene).intensity=1.25;const l=new B.PointLight('core',new B.Vector3(0,3,-9),scene);l.intensity=1.8;l.range=28;build();engine.runRenderLoop(()=>{const now=performance.now(),dt=Math.min(.05,Math.max(.001,(now-(lastFrame||now-16))/1000));lastFrame=now;time+=dt;for(let i=0;i<animated.length;i++){animated[i].rotation.y+=.004;animated[i].scaling.setAll(1+Math.sin(time*2+i)*.09)}const touchMagnitude=Math.min(1,Math.hypot(mobileMove.x,mobileMove.y)),sprinting=sprintHeld||touchMagnitude>.86;camera.speed=sprinting?.62:.32;
 if(started&&touchMagnitude>.06){const forward=new B.Vector3(Math.sin(camera.rotation.y),0,Math.cos(camera.rotation.y)),right=new B.Vector3(Math.cos(camera.rotation.y),0,-Math.sin(camera.rotation.y));const speed=(sprinting?7.6:3.9)*dt;camera.position.addInPlace(forward.scale(mobileMove.y*speed));camera.position.addInPlace(right.scale(mobileMove.x*speed))}
 const oldPos=prevXZ||{x:camera.position.x,z:camera.position.z},distance=Math.hypot(camera.position.x-oldPos.x,camera.position.z-oldPos.z);prevXZ={x:camera.position.x,z:camera.position.z};const moving=started&&distance>.0003,speedMeasured=Math.min(10,distance/dt),running=moving&&(sprinting||speedMeasured>5.2);
