@@ -58,11 +58,11 @@ if(phase==='doors'){
 const answers=scenarios[step]?.a||['ERKENNTNIS','ERINNERUNG','VERBINDUNG'];
 for(let i=0;i<3;i++){
 const x=(i-1)*4.6;
-box('answer door '+i,x,2,-12,4.15,4,.3,doorMat);
-box('door frame left',x-2.13,2,-11.7,.13,4.2,.4,steel);
-box('door frame right',x+2.13,2,-11.7,.13,4.2,.4,steel);
-label(answers[i],x,-11.5,accent);
-const trigger=box('doorTrigger',x,1.8,-11.3,3.8,3.7,.25,shadow);
+box('answer door '+i,x,2,-45,4.15,4,.3,doorMat);
+box('door frame left',x-2.13,2,-44.7,.13,4.2,.4,steel);
+box('door frame right',x+2.13,2,-44.7,.13,4.2,.4,steel);
+label(answers[i],x,-44.5,accent);
+const trigger=box('doorTrigger',x,1.8,-44.3,3.8,3.7,.25,shadow);
 trigger.visibility=.01;trigger.metadata={answer:i};doors.push(trigger);
 }
 $('hud').textContent='SEKTOR '+String(step+1).padStart(2,'0')+' // KAMMER // DREI TÜREN';
@@ -85,7 +85,7 @@ const exertionTarget=running?1:moving?.38:0;stamina+=(exertionTarget-stamina)*(1
 const breathingHz=.23+stamina*.42;breathPhase+=dt*Math.PI*2*breathingHz;stepPhase+=dt*(moving?(running?12:8):0);
 const breath=Math.sin(breathPhase),breathLift=breath*(.009+stamina*.035),footLift=moving?Math.abs(Math.sin(stepPhase))*(running?.062:.023):0,sideSway=moving?Math.sin(stepPhase*.5)*(running?.017:.007):0;
 const desiredY=1.8+breathLift+footLift;viewY+=(desiredY-viewY)*(1-Math.exp(-dt*9));camera.position.y=viewY;const desiredRoll=Math.sin(breathPhase-.8)*(.0015+stamina*.008)+sideSway;viewRoll+=(desiredRoll-viewRoll)*(1-Math.exp(-dt*6));camera.rotation.z=viewRoll;
-$('breath').textContent='PULS '+Math.round(62+stamina*88)+' BPM · '+(running?'SPRINT':moving?'BEWEGUNG':'RUHE');camera.position.x=Math.max(-8.7,Math.min(8.7,camera.position.x));camera.position.z=Math.max(-10.8,Math.min(14,camera.position.z));l.intensity=1.4+Math.sin(time*2)*.35;if(started&&phase==='vault'&&camera.position.z<3&&!scanReady){scanReady=true;window.COMEPLAIY_REALITY?.scan(()=>{phase='gaze';resetCamera();draw();say('Die Tür bewegt sich nur, wenn du hinsiehst. Wende den Blick ab und geh weiter.')})}if(started&&phase==='gaze'){laserMeshes.forEach(m=>m.visibility=0);lookAway=window.COMEPLAIY_REALITY?.away()||false;const gate=objects.find(o=>o.name==='Tresortuer');if(gate){const target=lookAway?7.9:0;gate.position.x+=(target-gate.position.x)*Math.min(1,dt*2.3);if((lookAway&&!gate.metadata?.wasAway)||(!lookAway&&gate.metadata?.wasAway)){window.COMEPLAIY_REALITY?.creak();gate.metadata.wasAway=lookAway}}if(lookAway&&camera.position.z<-8.7){phase='doors';window.COMEPLAIY_REALITY?.stop();build();draw();say('Du bist durchgekommen. Jetzt beginnen meine Fragen. '+scenarios[0].q)}}if(started&&phase==='doors'&&scenarios[step]&&!lock){for(const d of doors){if(B.Vector3.Distance(camera.position,d.position)<3.1){lock=true;choose(d.metadata.answer);setTimeout(()=>lock=false,800);break}}}scene.render()});$('scene').addEventListener('click',()=>{if(started&&document.pointerLockElement!==$('scene'))$('scene').requestPointerLock?.()});window.addEventListener('resize',()=>engine.resize());$('load').textContent='WELT BEREIT'}
+$('breath').textContent='PULS '+Math.round(62+stamina*88)+' BPM · '+(running?'SPRINT':moving?'BEWEGUNG':'RUHE');camera.position.x=Math.max(-8.7,Math.min(8.7,camera.position.x));camera.position.z=Math.max(phase==='doors'?-47:-10.8,Math.min(14,camera.position.z));l.intensity=1.4+Math.sin(time*2)*.35;if(started&&phase==='vault'&&camera.position.z<3&&!scanReady){scanReady=true;window.COMEPLAIY_REALITY?.scan(()=>{phase='gaze';resetCamera();draw();say('Die Tür bewegt sich nur, wenn du hinsiehst. Wende den Blick ab und geh weiter.')})}if(started&&phase==='gaze'){laserMeshes.forEach(m=>m.visibility=0);lookAway=window.COMEPLAIY_REALITY?.away()||false;const gate=objects.find(o=>o.name==='Tresortuer');if(gate){const target=lookAway?7.9:0;gate.position.x+=(target-gate.position.x)*Math.min(1,dt*2.3);if((lookAway&&!gate.metadata?.wasAway)||(!lookAway&&gate.metadata?.wasAway)){window.COMEPLAIY_REALITY?.creak();gate.metadata.wasAway=lookAway}}if(lookAway&&camera.position.z<-8.7){phase='doors';window.COMEPLAIY_REALITY?.stop();build();draw();say('Du bist durchgekommen. Jetzt beginnen meine Fragen. '+scenarios[0].q)}}if(started&&phase==='doors'&&scenarios[step]&&!lock){for(const d of doors){if(B.Vector3.Distance(camera.position,d.position)<3.1){lock=true;choose(d.metadata.answer);setTimeout(()=>lock=false,800);break}}}scene.render()});$('scene').addEventListener('click',()=>{if(started&&document.pointerLockElement!==$('scene'))$('scene').requestPointerLock?.()});window.addEventListener('resize',()=>engine.resize());$('load').textContent='WELT BEREIT'}
 function setupTouch(){const joy=$('joystick'),stick=$('stick'),canvas=$('scene');let joyId=null;
 function joyUpdate(e){const r=joy.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,dx=e.clientX-cx,dy=e.clientY-cy,lim=r.width*.32,len=Math.hypot(dx,dy)||1,k=Math.min(1,lim/len);const x=dx*k,y=dy*k;mobileMove.x=x/lim;mobileMove.y=-y/lim;stick.style.transform='translate('+x+'px,'+y+'px)'}
 joy.addEventListener('pointerdown',e=>{e.preventDefault();joyId=e.pointerId;joy.setPointerCapture(e.pointerId);joyUpdate(e)});
