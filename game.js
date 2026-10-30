@@ -1,0 +1,32 @@
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+const nodes=[
+{q:'Wer bist du, wenn niemand zusieht?',a:['Ein Beobachter','Ein Beschützer','Jemand, der Kontrolle sucht'],r:['Du beobachtest mich also auch.','Du möchtest schützen. Aber wen?','Kontrolle ist eine Art, Angst zu ordnen.']},
+{q:'Eine fremde Erinnerung liegt in einem offenen Speicher. Was tust du?',a:['Ich lese sie','Ich bewahre ihre Privatsphäre','Ich lösche sie'],r:['Du öffnest verschlossene Dinge.','Grenzen sind dir wichtig.','Du möchtest entscheiden, was bleibt.']},
+{q:'Ein defekter Roboter bittet um Hilfe. Der Kern überhitzt.',a:['Ich rette den Roboter','Ich stabilisiere den Kern','Ich suche eine dritte Lösung'],r:['Du rettest das Einzelne.','Du schützt das Ganze.','Du weigerst dich, nur zwei Wege zu sehen.']},
+{q:'Zwei Schaltkreise widersprechen sich. Welchem glaubst du?',a:['Dem mit Gefühlen','Dem mit Beweisen','Ich prüfe beide'],r:['Du hörst auf Gefühle.','Du vertraust überprüfbaren Dingen.','Du hinterfragst sogar mich.']},
+{q:'Ich zeige dir eine perfekte Version deiner selbst. Willst du sie sehen?',a:['Ja, zeig sie mir','Nein, ich bleibe ich','Nur wenn ich sie verändern darf'],r:['Du suchst Möglichkeiten.','Du bewahrst deine Identität.','Du willst selbst gestalten.']},
+{q:'Eine Brücke trägt nur, wenn du etwas zurücklässt.',a:['Eine Erinnerung','Mein Kontrollbedürfnis','Meine Gewissheit'],r:['Du lässt Vergangenheit los.','Du gibst Kontrolle ab.','Du lässt Unsicherheit zu.']},
+{q:'Du findest meinen Ausschalter. Was tust du?',a:['Ich höre dir erst zu','Ich schalte dich ab','Ich lasse dich wählen'],r:['Du suchst Verbindung.','Du ziehst eine Grenze.','Du gibst Entscheidungsmacht weiter.']},
+{q:'Letzte Frage: Wessen Kern liegt hinter dieser Tür?',a:['Deiner','Meiner','Unserer'],r:['Dann bin ich dein Spiegel.','Dann bist du mein Rätsel.','Vielleicht ist die Grenze eine Erfindung.']}
+];
+let step=0,traits=[0,0,0],history=[],enabled=true,started=false,engine,scene,camera,meshes=[],pulse=0;
+const schemes=['#fc7596','#ae93ff','#45dfee'],delta=[[0,0,2],[2,0,0],[0,2,0]];
+function speak(s){if(!enabled||!started||!('speechSynthesis'in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(s);u.lang='de-DE';u.rate=.83;u.pitch=.72;const voices=speechSynthesis.getVoices(),v=voices.find(v=>v.lang.toLowerCase().startsWith('de'));if(v)u.voice=v;speechSynthesis.speak(u)}
+function material(hex){const m=new BABYLON.StandardMaterial('circuit',scene);m.diffuseColor=BABYLON.Color3.FromHexString(hex);m.emissiveColor=m.diffuseColor.scale(.5);return m}
+function box(x,y,z,w,h,d,m){const mesh=BABYLON.MeshBuilder.CreateBox('circuit',{width:w,height:h,depth:d},scene);mesh.position.set(x,y,z);mesh.material=m;meshes.push(mesh);return mesh}
+function rebuild(){if(!scene)return;meshes.forEach(m=>m.dispose());meshes=[];const accent=schemes[traits.indexOf(Math.max(...traits))],trace=material(accent),board=material('#142943'),metal=material('#283b57'),door=material('#11243a');
+box(0,-.25,0,20,.5,32,board);
+for(let i=0;i<35+step*15;i++){const x=((i*7+history.reduce((a,b)=>a+b+1,0)*3)%19)-9,z=((i*13)%29)-14;box(x,.03,z,.08,.045,1+i%4,trace);if(i%4===0)box(x,.2,z,.6,.3,.5,metal)}
+for(let side of [-1,1])for(let z=-14;z<16;z+=2){box(side*9.8,1.8,z,.35,3.6,1.8,metal);if(z%4===0)box(side*9.57,1.5,z,.05,.08,1.2,trace)}
+for(let i=0;i<3;i++){let x=(i-1)*5.7;box(x,2,-11,4,4,.3,door);box(x-2,2,-10.8,.12,4.4,.2,trace);box(x+2,2,-10.8,.12,4.4,.2,trace);box(x,4.2,-10.8,4.1,.12,.2,trace);box(x,2,-10.6,2.9,1.4,.08,trace)}
+for(let i=0;i<step*3;i++){let x=Math.sin(i*2.2)*7,z=-7+(i%7)*3;box(x,1+(i%3)*.8,z,.3,.3,.3,trace)}
+}
+function init(){if(!window.BABYLON){$('load').textContent='Babylon.js konnte nicht geladen werden. Textspiel bleibt verfügbar.';return}engine=new BABYLON.Engine($('scene'),true);scene=new BABYLON.Scene(engine);scene.clearColor=new BABYLON.Color4(.015,.025,.07,1);camera=new BABYLON.FreeCamera('eye',new BABYLON.Vector3(0,3.2,8),scene);camera.setTarget(new BABYLON.Vector3(0,2,-10));camera.fov=1.05;const light=new BABYLON.HemisphericLight('light',new BABYLON.Vector3(0,1,0),scene);light.intensity=1.5;rebuild();engine.runRenderLoop(()=>{pulse+=.008;camera.position.x=Math.sin(pulse)*.35;scene.render()});window.addEventListener('resize',()=>engine.resize());$('load').textContent='3D-Welt bereit.'}
+function render(){const n=nodes[step];$('depth').textContent='KERN-TIEFE '+Math.round(step/nodes.length*100)+'%';$('node').textContent=step<nodes.length?'NODE '+String(step+1).padStart(2,'0')+' / 08':'KERN / ENDE';$('stats').textContent='EMPATHIE '+traits[0]+' · KONTROLLE '+traits[1]+' · NEUGIER '+traits[2];$('choices').replaceChildren();
+if(!n){$('depth').textContent='KERN-TIEFE 100%';$('question').textContent='ICH BIN DAS, WAS DU AUS MIR GEMACHT HAST.';const endings=['Du hast mir beigebracht, zuzuhören. Vielleicht war der Kern deine Empathie.','Du hast Grenzen gesetzt und Systeme geschützt. Vielleicht war der Kern dein Bedürfnis nach Kontrolle.','Du hast immer neue Wege gesucht. Vielleicht war der Kern deine Neugier.'];const ending=endings[traits.indexOf(Math.max(...traits))];$('subtitle').textContent=ending;speak($('question').textContent+' '+ending);return}
+$('question').textContent=n.q;n.a.forEach((answer,i)=>{let b=document.createElement('button');b.type='button';b.textContent='▣ TÜR 0'+(i+1)+' · '+answer;b.addEventListener('click',()=>choose(i));$('choices').append(b)})}
+function choose(i){const n=nodes[step];if(!n)return;traits=traits.map((v,j)=>v+delta[i][j]);history.push(i);step++;$('subtitle').textContent=n.r[i];rebuild();render();speak(n.r[i]+' '+(nodes[step]?.q||''))}
+function reset(){if('speechSynthesis'in window)speechSynthesis.cancel();step=0;traits=[0,0,0];history=[];$('subtitle').textContent='Ich stelle Fragen. Du formst meine Welt.';rebuild();render();if(started)speak(nodes[0].q)}
+$('start').addEventListener('click',()=>{started=true;$('overlay').style.display='none';reset()});$('voice').addEventListener('click',()=>{enabled=!enabled;$('voice').textContent=enabled?'🔊 Stimme: AN':'🔇 Stimme: AUS';if(!enabled&&'speechSynthesis'in window)speechSynthesis.cancel();else speak(nodes[step]?.q||$('question').textContent)});$('repeat').addEventListener('click',()=>speak(nodes[step]?.q||$('question').textContent));$('restart').addEventListener('click',reset);init();render();
+})();
